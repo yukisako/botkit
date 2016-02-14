@@ -80,19 +80,10 @@ var bot = controller.spawn({
     token: process.env.token
 }).startRTM();
 
+var fs = require('fs');
+
 
 controller.hears(['hello','hi'],'direct_message,direct_mention,mention',function(bot, message) {
-
-    bot.api.reactions.add({
-        timestamp: message.ts,
-        channel: message.channel,
-        name: 'robot_face',
-    },function(err, res) {
-        if (err) {
-            bot.botkit.log('Failed to add emoji reaction :(',err);
-        }
-    });
-
 
     controller.storage.users.get(message.user,function(err, user) {
         if (user && user.name) {
@@ -102,6 +93,100 @@ controller.hears(['hello','hi'],'direct_message,direct_mention,mention',function
         }
     });
 });
+
+
+
+controller.hears(['add (.*)'],'direct_message,direct_mention,mention',function(bot, message) {
+    var matches = message.text.match(/add (.*)/i);
+    var task = matches[1];
+    var data;
+    var num;
+
+    controller.storage.users.get(message.user,function(err, user) {
+
+
+      fs.readFile('./test.txt', 'utf8', function (err, text) {
+        matches = text.match(/現在保存しているメモ数: \d+/);
+        num = matches[0].match(/\d+/) * 1 + 1;
+        bot.reply(message, "「" + task + "」" + "をメモに追加しました．");
+        var newnum = "現在保存しているメモ数: " + num;
+
+        var tasks = text.split(/\(\d+\)/)
+
+        var write_data = "【" + newnum + "】\n\n"
+
+        for (var i = 1; i < num; i++) {
+          write_data = write_data + "(" + i + ") " + tasks[i]; 
+        };
+
+        write_data = write_data + "\n(" + i + ")" + task;
+
+
+        fs.writeFile('./test.txt',write_data,function(err){
+         if(err) throw err;
+        });
+
+      });
+
+
+        
+    });
+});
+
+controller.hears(['show'],'direct_message,direct_mention,mention',function(bot, message) {
+    controller.storage.users.get(message.user,function(err, user) {
+
+      fs.readFile('./test.txt', 'utf8', function (err, text) {
+          bot.reply(message, "メモを表示します\n" + text);
+          // console.log('text file!');
+          // console.log(text);
+          // console.log('error!?');
+          // console.log(err);
+      });
+
+    });
+});
+
+
+controller.hears(['delete (.*)'],'direct_message,direct_mention,mention',function(bot, message) {
+    var matches = message.text.match(/delete (\d+)/);
+    if(matches){
+      var task = matches[1];
+
+      controller.storage.users.get(message.user,function(err, user) {
+        fs.readFile('./test.txt', 'utf8', function (err, text) {
+          matches = text.match(/現在保存しているメモ数: \d+/);
+          num = matches[0].match(/\d+/) * 1 - 1;
+          bot.reply(message, "(" + task + ")" + "のメモを削除します．");
+          var newnum = "現在保存しているメモ数: " + num;
+
+          var tasks = text.split(/\(\d+\)/)
+
+          var write_data = "【" + newnum + "】\n\n"
+
+          tasks.splice( task , 1 );
+
+          for (var i = 1; i < num+1; i++) {
+            write_data = write_data + "(" + i + ") " + tasks[i]; 
+          };
+
+
+          fs.writeFile('./test.txt',write_data,function(err){
+           if(err) throw err;
+          });
+
+        });
+      });
+    } else {
+      bot.reply(message, "引数が間違ってます");
+    }
+});
+
+
+
+
+
+
 
 controller.hears(['call me (.*)'],'direct_message,direct_mention,mention',function(bot, message) {
     var matches = message.text.match(/call me (.*)/i);
