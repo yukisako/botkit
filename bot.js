@@ -63,39 +63,6 @@ This bot demonstrates many of the core features of Botkit:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
-
-if (!process.env.token) {
-    console.log('Error: Specify token in environment');
-    process.exit(1);
-}
-
-var Botkit = require('./lib/Botkit.js');
-var os = require('os');
-
-var controller = Botkit.slackbot({
-    debug: true,
-});
-
-var bot = controller.spawn({
-    token: process.env.token
-}).startRTM();
-
-var fs = require('fs');
-
-
-controller.hears(['hello','hi'],'direct_message,direct_mention,mention',function(bot, message) {
-
-    controller.storage.users.get(message.user,function(err, user) {
-        if (user && user.name) {
-            bot.reply(message,'Hello ' + user.name + '!!');
-        } else {
-            bot.reply(message,'Hello.');
-        }
-    });
-});
-
-
-
 controller.hears(['add (.*)'],'direct_message,direct_mention,mention',function(bot, message) {
     var matches = message.text.match(/add (.*)/i);
     var task = matches[1];
@@ -156,24 +123,28 @@ controller.hears(['delete (.*)'],'direct_message,direct_mention,mention',functio
       controller.storage.users.get(message.user,function(err, user) {
         fs.readFile('./test.txt', 'utf8', function (err, text) {
           matches = text.match(/現在保存しているメモ数: \d+/);
-          num = matches[0].match(/\d+/) * 1 - 1;
-          bot.reply(message, "(" + task + ")" + "のメモを削除します．");
-          var newnum = "現在保存しているメモ数: " + num;
+          num = matches[0].match(/\d+/) * 1;
+          if (task<=num){
+            bot.reply(message, "(" + task + ")" + "のメモを削除します．");
+            var newnum = "現在保存しているメモ数: " + (num - 1);
 
-          var tasks = text.split(/\(\d+\)/)
+            var tasks = text.split(/\(\d+\)/)
 
-          var write_data = "【" + newnum + "】\n\n"
+            var write_data = "【" + newnum + "】\n\n"
 
-          tasks.splice( task , 1 );
+            tasks.splice( task , 1 );
 
-          for (var i = 1; i < num+1; i++) {
-            write_data = write_data + "(" + i + ") " + tasks[i]; 
-          };
+            for (var i = 1; i < num; i++) {
+              write_data = write_data + "(" + i + ") " + tasks[i]; 
+            };
 
 
-          fs.writeFile('./test.txt',write_data,function(err){
-           if(err) throw err;
-          });
+            fs.writeFile('./test.txt',write_data,function(err){
+             if(err) throw err;
+            });
+          } else {
+            bot.reply(message, "引数が間違ってます");
+          }
 
         });
       });
@@ -182,6 +153,38 @@ controller.hears(['delete (.*)'],'direct_message,direct_mention,mention',functio
     }
 });
 
+
+/*
+//元のbotkitにあったやつ
+if (!process.env.token) {
+    console.log('Error: Specify token in environment');
+    process.exit(1);
+}
+
+var Botkit = require('./lib/Botkit.js');
+var os = require('os');
+
+var controller = Botkit.slackbot({
+    debug: true,
+});
+
+var bot = controller.spawn({
+    token: process.env.token
+}).startRTM();
+
+var fs = require('fs');
+
+
+controller.hears(['hello','hi'],'direct_message,direct_mention,mention',function(bot, message) {
+
+    controller.storage.users.get(message.user,function(err, user) {
+        if (user && user.name) {
+            bot.reply(message,'Hello ' + user.name + '!!');
+        } else {
+            bot.reply(message,'Hello.');
+        }
+    });
+});
 
 
 
@@ -269,3 +272,5 @@ function formatUptime(uptime) {
     uptime = uptime + ' ' + unit;
     return uptime;
 }
+
+*/
