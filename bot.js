@@ -63,6 +63,25 @@ This bot demonstrates many of the core features of Botkit:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
+if (!process.env.token) {
+    console.log('Error: Specify token in environment');
+    process.exit(1);
+}
+
+var Botkit = require('./lib/Botkit.js');
+var os = require('os');
+
+var controller = Botkit.slackbot({
+    debug: true,
+});
+
+var bot = controller.spawn({
+    token: process.env.token
+}).startRTM();
+
+var fs = require('fs');
+
+
 controller.hears(['add (.*)'],'direct_message,direct_mention,mention',function(bot, message) {
     var matches = message.text.match(/add (.*)/i);
     var task = matches[1];
@@ -73,8 +92,8 @@ controller.hears(['add (.*)'],'direct_message,direct_mention,mention',function(b
 
 
       fs.readFile('./test.txt', 'utf8', function (err, text) {
-        matches = text.match(/現在保存しているメモ数: \d+/);
-        num = matches[0].match(/\d+/) * 1 + 1;
+        matches = text.match(/現在保存しているメモ数: (\d+)/);
+        num = matches[1] * 1 + 1;
         bot.reply(message, "「" + task + "」" + "をメモに追加しました．");
         var newnum = "現在保存しているメモ数: " + num;
 
@@ -155,25 +174,7 @@ controller.hears(['delete (.*)'],'direct_message,direct_mention,mention',functio
 
 
 /*
-//元のbotkitにあったやつ
-if (!process.env.token) {
-    console.log('Error: Specify token in environment');
-    process.exit(1);
-}
-
-var Botkit = require('./lib/Botkit.js');
-var os = require('os');
-
-var controller = Botkit.slackbot({
-    debug: true,
-});
-
-var bot = controller.spawn({
-    token: process.env.token
-}).startRTM();
-
-var fs = require('fs');
-
+//元のbotkit
 
 controller.hears(['hello','hi'],'direct_message,direct_mention,mention',function(bot, message) {
 
